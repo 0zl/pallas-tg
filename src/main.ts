@@ -10,6 +10,7 @@ import { Bot as Grammy, Context } from "https://deno.land/x/grammy@v1.15.3/mod.t
 import { BotCommand, UserFromGetMe } from 'https://deno.land/x/grammy_types@v3.0.3/manage.ts'
 import { Application as Oak } from "https://deno.land/x/oak@v12.1.0/mod.ts"
 import { Message } from 'https://deno.land/x/grammy_types@v3.0.3/message.ts'
+import { InlineKeyboardMarkup } from 'https://deno.land/x/grammy_types@v3.0.3/markup.ts'
 
 type DeployMode = 'direct' | 'heroku'
 type CommandLimits = {
@@ -19,7 +20,7 @@ type CommandLimits = {
 
 interface WrapperContext {
     replyUser: (ctx: Context, text: string) => Promise<Message.TextMessage>
-    editReplyUser: (ctx: Context, text: string, chatId: string | number, messageId: number) => Promise<void>
+    editReplyUser: (ctx: Context, text: string, chatId: string | number, messageId: number, replyMarkup?: InlineKeyboardMarkup) => Promise<void>
     createSeqInput: (ctx: Context, id: number, command: string, questions: string[], task?: string) => Promise<void>
 }
 
@@ -100,12 +101,13 @@ class PallasClass extends Grammy {
                 })
             },
 
-            editReplyUser: async (ctx: Context, text: string, chatId: string | number, messageId: number) => {
+            editReplyUser: async (ctx: Context, text: string, chatId: string | number, messageId: number, replyMarkup?: InlineKeyboardMarkup) => {
                 for ( const char of reservedChars ) text = text.replaceAll(char, `\\${char}`)
                 for ( const char of removeChars ) text = text.replaceAll(char, '')
                 
                 await ctx.api.editMessageText(chatId, messageId, `@${ctx.from?.username}, ${text}`, {
-                    parse_mode: 'MarkdownV2'
+                    parse_mode: 'MarkdownV2',
+                    reply_markup: replyMarkup
                 })
             },
 

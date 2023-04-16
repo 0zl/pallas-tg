@@ -2,6 +2,7 @@ import type { Command, Context, WrapperContext, SequenceInput } from '../main.ts
 import PallasMemory from '../memory.ts'
 
 import YtMusic from '../libs/yt-music.ts'
+import { InlineKeyboard } from 'https://deno.land/x/grammy@v1.15.3/mod.ts'
 
 export default class TestCommand implements Command {
     name = 'yta'
@@ -29,12 +30,15 @@ export default class TestCommand implements Command {
                 const res = await YtMusic.search(query)
                 
                 let message = '*Search Result:*\n\n'
+                const ik = new InlineKeyboard()
+
                 for ( let i = 0; i < 6; i++ ) {
                     const data = res[i]
                     message += `- *${i+1}.* ${data.title.text}\n\n`
+                    ik.text(`${i+1}`, `yta|get-audio|${data.id}`)
                 }
                 
-                await _W.editReplyUser(ctx, message, Number(fMsg.chat.id), Number(fMsg.message_id))
+                await _W.editReplyUser(ctx, message, Number(fMsg.chat.id), Number(fMsg.message_id), ik)
             }
         }
 
