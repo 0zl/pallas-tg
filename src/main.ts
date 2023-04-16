@@ -9,6 +9,7 @@ import { assert } from 'https://deno.land/std@0.183.0/_util/asserts.ts'
 import { Bot as Grammy, Context } from "https://deno.land/x/grammy@v1.15.3/mod.ts"
 import { BotCommand, UserFromGetMe } from 'https://deno.land/x/grammy_types@v3.0.3/manage.ts'
 import { Application as Oak } from "https://deno.land/x/oak@v12.1.0/mod.ts"
+import { Message } from 'https://deno.land/x/grammy_types@v3.0.3/message.ts'
 
 type DeployMode = 'direct' | 'heroku'
 type CommandLimits = {
@@ -17,8 +18,9 @@ type CommandLimits = {
 }
 
 interface WrapperContext {
-    replyUser: (ctx: Context, text: string) => Promise<void>
-    createSeqInput: (ctx: Context, id: number, command: string, questions: string[]) => Promise<void>
+    replyUser: (ctx: Context, text: string) => Promise<Message.TextMessage>
+    editReplyUser: (ctx: Context, text: string, chatId: string | number, messageId: number) => Promise<void>
+    createSeqInput: (ctx: Context, id: number, command: string, questions: string[], task?: string) => Promise<void>
 }
 
 interface Command {
@@ -83,21 +85,36 @@ class PallasClass extends Grammy {
     }
 
     handleEvents() {
+        const reservedChars = ['.', '!', '-', '(', ')', '[', ']', '#', '|', '_', '<', '>']
+        const removeChars = ['~']
+        
         // simple wrapper for command handler.
         const W: WrapperContext = {
             replyUser: async (ctx: Context, text: string) => {
-                text = text.replace(/\./g, '\\.')
-                await ctx.reply(`@${ctx.from?.username}, ${text}`, {
+                for ( const char of reservedChars ) text = text.replaceAll(char, `\\${char}`)
+                for ( const char of removeChars ) text = text.replaceAll(char, '')
+
+                return await ctx.reply(`@${ctx.from?.username}, ${text}`, {
                     parse_mode: 'MarkdownV2',
                     message_thread_id: ctx.message?.reply_to_message?.message_thread_id
                 })
             },
 
-            createSeqInput: async (ctx: Context, id: number, command: string, questions: string[]) => {
-                this.Memory.setSeqInput(id, command, ...questions)
+            editReplyUser: async (ctx: Context, text: string, chatId: string | number, messageId: number) => {
+                for ( const char of reservedChars ) text = text.replaceAll(char, `\\${char}`)
+                for ( const char of removeChars ) text = text.replaceAll(char, '')
+                
+                await ctx.api.editMessageText(chatId, messageId, `@${ctx.from?.username}, ${text}`, {
+                    parse_mode: 'MarkdownV2'
+                })
+            },
+
+            createSeqInput: async (ctx: Context, id: number, command: string, questions: string[], task = 'default') => {
+                this.Memory.setSeqInput(id, command, task, ...questions)
 
                 let firstQuestion = questions[0]
-                firstQuestion = firstQuestion.replace(/\./g, '\\.')
+                for ( const char of reservedChars ) firstQuestion = firstQuestion.replaceAll(char, `\\${char}`)
+                for ( const char of removeChars ) firstQuestion = firstQuestion.replaceAll(char, '')
 
                 await ctx.reply(`@${ctx.from?.username}, ${firstQuestion}`, {
                     parse_mode: 'MarkdownV2',

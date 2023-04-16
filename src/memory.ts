@@ -5,6 +5,7 @@ import type { Message } from 'https://deno.land/x/grammy_types@v3.0.3/message.ts
 
 type SequenceInput = {
     command: string | null
+    task: string
     question: string[]
     answer: Message[]
 }
@@ -37,6 +38,7 @@ export default class PallasMemory {
         return {
             sequenceInput: {
                 command: null,
+                task: 'default',
                 question: [],
                 answer: []
             },
@@ -118,9 +120,10 @@ export default class PallasMemory {
         }
     }
 
-    setSeqInput(id: number, command: string, ...question: string[]) {
+    setSeqInput(id: number, command: string, task: string, ...question: string[]) {
         this.checkUser(id)
         this.Users[id].sequenceInput.command = command
+        this.Users[id].sequenceInput.task = task
         this.Users[id].sequenceInput.question.push(...question)
     }
 
@@ -128,7 +131,7 @@ export default class PallasMemory {
         this.Users[id].sequenceInput.answer.push(answer)
     }
 
-    getSeqInput(id: number): { command: string | null; question: string[]; answer: Message[] } {
+    getSeqInput(id: number): { command: string | null; task: string, question: string[]; answer: Message[] } {
         return this.Users[id].sequenceInput
     }
 
@@ -146,13 +149,10 @@ export default class PallasMemory {
     }
 
     clearSeqInput(id: number) {
-        this.updateUser(id, {
-            sequenceInput: {
-                command: null,
-                question: [],
-                answer: []
-            }
-        })
+        this.Users[id].sequenceInput.command = null
+        this.Users[id].sequenceInput.task = 'default'
+        this.Users[id].sequenceInput.question = []
+        this.Users[id].sequenceInput.answer = []
     }
 }
 
