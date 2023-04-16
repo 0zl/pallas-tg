@@ -83,21 +83,40 @@ class PallasClass extends Grammy {
 
     handleEvents() {
         // simple wrapper for command handler.
-        const W = {
+        const W: WrapperContext = {
             replyUser: async (ctx: Context, text: string) => {
-                await ctx.reply(`@${ctx.from?.username}, ${text}`)
+                text = text.replace(/\./g, '\\.')
+                await ctx.reply(`@${ctx.from?.username}, ${text}`, {
+                    parse_mode: 'MarkdownV2',
+                    message_thread_id: ctx.message?.reply_to_message?.message_thread_id
+                })
             },
 
             createSeqInput: async (ctx: Context, id: number, command: string, questions: string[]) => {
                 this.Memory.setSeqInput(id, command, ...questions)
-                const firstQuestion = questions[0]
-                await ctx.reply(`@${ctx.from?.username}, ${firstQuestion}`)
+
+                let firstQuestion = questions[0]
+                firstQuestion = firstQuestion.replace(/\./g, '\\.')
+
+                await ctx.reply(`@${ctx.from?.username}, ${firstQuestion}`, {
+                    parse_mode: 'MarkdownV2',
+                    message_thread_id: ctx.message?.reply_to_message?.message_thread_id
+                })
             }
         }
 
         for ( const cmd of Object.values(this.Commands) ) {
             this.command(cmd.name, async ctx => {
                 if ( ctx.from?.is_bot ) return
+                if ( !ctx.from?.id ) return
+
+                this.Memory.checkUser(ctx.from?.id)
+
+                // check sequence input.
+                if ( this.Memory.isSeqInputRequired(ctx.from?.id) ) { 
+                    await W.replyUser(ctx, `You're currently in a command task.\n\nUse */cancel* to cancel the previous task.`)
+                    return
+                }
 
                 if ( !cmd.limits.private && ctx.chat?.type === 'private' ) {
                     await W.replyUser(ctx, 'This command is not allowed in private chat.')
@@ -106,11 +125,6 @@ class PallasClass extends Grammy {
 
                 if ( ['group', 'supergroup'].includes(ctx.chat?.type) && !cmd.limits.group ) {
                     await W.replyUser(ctx, 'This command is not allowed in group chat.')
-                    return
-                }
-
-                if ( ctx.chat?.type === 'channel' && !cmd.limits.channel ) {
-                    await W.replyUser(ctx, 'This command is not allowed in channel type.')
                     return
                 }
 
