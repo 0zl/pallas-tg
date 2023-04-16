@@ -116,7 +116,7 @@ export default class PallasMemory {
         }
     }
 
-    addSeqInput(id: number, command: string, ...question: string[]) {
+    setSeqInput(id: number, command: string, ...question: string[]) {
         this.Users[id].sequenceInput.command = command
         this.Users[id].sequenceInput.question.push(...question)
     }
@@ -125,12 +125,14 @@ export default class PallasMemory {
         this.Users[id].sequenceInput.answer.push(answer)
     }
 
-    getSeqInput(id: number): { question: string[]; answer: Message[] } {
+    getSeqInput(id: number): { command: string | null; question: string[]; answer: Message[] } {
         return this.Users[id].sequenceInput
     }
 
     isSeqInputRequired(id: number): boolean {
-        return this.Users[id].sequenceInput.command !== null && this.Users[id].sequenceInput.question.length > 0
+        return this.Users[id].sequenceInput.command !== null && 
+            this.Users[id].sequenceInput.question.length > 0 &&
+            this.Users[id].sequenceInput.answer.length < this.Users[id].sequenceInput.question.length
     }
 
     isSeqComplete(id: number): boolean {

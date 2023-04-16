@@ -22,11 +22,11 @@ export default class PallasSecurity extends EventEmitter<PallasSecurityEvents> {
         log('success', 'Pallas Security initialized.')
     }
 
-    checkMessageSpam(ctx: Context) {
+    checkMessageSpam(ctx: Context): boolean {
         const uid = ctx.from?.id
         const isGroup = ctx.chat?.type === 'group' || ctx.chat?.type === 'supergroup'
 
-        if ( !uid || !isGroup ) return
+        if ( !uid || !isGroup ) return false
         
         const user = this.PMemory.getUser(uid)
         const { spam } = user.security
@@ -59,7 +59,10 @@ export default class PallasSecurity extends EventEmitter<PallasSecurityEvents> {
                 this.PMemory.clearTimeout(uid, 'spmbcx')
 
                 this.emit('messageSpam', ctx)
+                return true
             }
         }
+
+        return false
     }
 }

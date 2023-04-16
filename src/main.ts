@@ -117,14 +117,38 @@ class PallasClass extends Grammy {
             })
         }
 
-        this.on('message', ctx => {
+        this.on('message', async ctx => {
             if ( !ctx.from?.id ) return
             if ( ctx.from?.is_bot ) return
 
-            //log('warn', ctx.message)
+            const uid = ctx.from?.id
 
             this.Memory.checkUser(ctx.from?.id)
-            this.Security.checkMessageSpam(ctx)
+            if ( this.Security.checkMessageSpam(ctx) ) return
+
+            // sequential input
+            if ( this.Memory.isSeqInputRequired(uid) ) {
+                this.Memory.addSeqAnswer(uid, ctx.message)
+                const seq = this.Memory.getSeqInput(uid)
+
+                if ( this.Memory.isSeqComplete(uid) ) {
+                    try {
+                        await this.Commands[seq?.command ?? -1]?.task(ctx, W, this.Memory)
+                        this.Memory.clearSeqInput(uid)
+                        log('info', `command task <${seq?.command}> executed by ${ctx.from?.first_name} (${ctx.from?.id})`)
+                    } catch (e) {
+                        await W.replyUser(ctx, 'An error occurred while executing the command, please try again later.')
+                        log('error', e)
+                    }
+                } else {
+                    const nextQuestion = seq?.question[seq?.answer.length ?? 0]
+                    if ( nextQuestion ) {
+                        await W.replyUser(ctx, nextQuestion)
+                    } else {
+                        await W.replyUser(ctx, 'An error occurred while executing the command, please try again later.')
+                    }
+                }
+            }
         })
 
         this.Security.on('messageSpam', async ctx => {
