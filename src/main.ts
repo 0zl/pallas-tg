@@ -12,7 +12,6 @@ type DeployMode = 'direct' | 'heroku'
 type CommandLimits = {
     private: boolean
     group: boolean
-    channel: boolean
 }
 
 interface WrapperContext {
@@ -113,7 +112,8 @@ class PallasClass extends Grammy {
                 this.Memory.checkUser(ctx.from?.id)
 
                 // check sequence input.
-                if ( this.Memory.isSeqInputRequired(ctx.from?.id) ) { 
+                const bypassSeq = ['cancel']
+                if ( this.Memory.isSeqInputRequired(ctx.from?.id) && !bypassSeq.includes(cmd.name) ) { 
                     await W.replyUser(ctx, `You're currently in a command task.\n\nUse */cancel* to cancel the previous task.`)
                     return
                 }

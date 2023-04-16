@@ -151,5 +151,7 @@ export default class PallasMemory {
                 answer: []
             }
         })
+
+        log('info', `user <${id}> sequence input cleared.`)
     }
 }

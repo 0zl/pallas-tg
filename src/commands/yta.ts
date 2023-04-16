@@ -9,8 +9,7 @@ export default class TestCommand implements Command {
     usage = 'yta'
     limits = {
         private: true,
-        group: true,
-        channel: false
+        group: true
     }
     
     run = async (ctx: Context, _W: WrapperContext, _M: PallasMemory) => {
