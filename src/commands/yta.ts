@@ -1,4 +1,4 @@
-import type { Command, Context, WrapperContext, SequenceInput } from '../main.ts'
+import type { Command, Context, WrapperContext, SequenceInput, InlineKeyboardData } from '../main.ts'
 import PallasMemory from '../memory.ts'
 
 import YtMusic from '../libs/yt-music.ts'
@@ -43,5 +43,16 @@ export default class TestCommand implements Command {
         }
 
         await tasks[_seq.task]()
+    }
+
+    inlineKeyboard = async (data: InlineKeyboardData, ctx: Context, _W: WrapperContext, _M: PallasMemory) => {
+        // deno-lint-ignore ban-types
+        const tasks: Record<string, Function> = {
+            'get-audio': async () => {
+                await _W.replyUser(ctx, 'get-audio!')
+            }
+        }
+
+        await tasks[data.task]()
     }
 }

@@ -18,6 +18,12 @@ type CommandLimits = {
     group: boolean
 }
 
+type InlineKeyboardData = {
+    command: string
+    task: string
+    data: unknown[]
+}
+
 interface WrapperContext {
     replyUser: (ctx: Context, text: string) => Promise<Message.TextMessage>
     editReplyUser: (ctx: Context, text: string, chatId: string | number, messageId: number, replyMarkup?: InlineKeyboardMarkup) => Promise<void>
@@ -32,6 +38,7 @@ interface Command {
     limits: CommandLimits
     run: (ctx: Context, W: WrapperContext, M: PallasMemory) => Promise<void>
     task: (seq: SequenceInput, ctx: Context, W: WrapperContext, M: PallasMemory) => Promise<void>
+    inlineKeyboard?: (data: InlineKeyboardData, ctx: Context, W: WrapperContext, M: PallasMemory) => Promise<void>
 }
 
 class PallasClass extends Grammy {
@@ -97,7 +104,9 @@ class PallasClass extends Grammy {
 
                 return await ctx.reply(`@${ctx.from?.username}, ${text}`, {
                     parse_mode: 'MarkdownV2',
-                    message_thread_id: ctx.message?.reply_to_message?.message_thread_id
+                    message_thread_id: 
+                        ctx.message?.reply_to_message?.message_thread_id ||
+                        ctx.update.callback_query?.message?.reply_to_message?.message_thread_id
                 })
             },
 
@@ -120,7 +129,9 @@ class PallasClass extends Grammy {
 
                 await ctx.reply(`@${ctx.from?.username}, ${firstQuestion}`, {
                     parse_mode: 'MarkdownV2',
-                    message_thread_id: ctx.message?.reply_to_message?.message_thread_id
+                    message_thread_id: 
+                        ctx.message?.reply_to_message?.message_thread_id ||
+                        ctx.update.callback_query?.message?.reply_to_message?.message_thread_id
                 })
             }
         }
@@ -193,6 +204,39 @@ class PallasClass extends Grammy {
             }
         })
 
+        this.on('callback_query:data', async ctx => {
+            if ( !ctx.from?.id ) return
+            if ( ctx.from?.is_bot ) return
+
+            const uid = ctx.from?.id
+            this.Memory.checkUser(uid)
+
+            if ( this.Memory.isSeqInputRequired(ctx.from?.id) ) { 
+                await W.replyUser(ctx, `You're currently in a command task.\n\nUse */cancel* to cancel the previous task.`)
+                return
+            }
+
+            const rawData = ctx.callbackQuery?.data.split('|')
+            const data: InlineKeyboardData = {
+                command: rawData[0],
+                task: rawData[1],
+                data: rawData.slice(2)
+            }
+
+            const cmd = this.Commands[data.command]
+            if ( !cmd || !cmd.inlineKeyboard )
+                return log('warn', `inline keyboard command <${data.command}> does not exist.`)
+
+            try {
+                await cmd.inlineKeyboard(data, ctx, W, this.Memory)
+                await ctx.answerCallbackQuery()
+                log('info', `inline keyboard <${data.command}> executed by ${ctx.from?.first_name} (${ctx.from?.id})`)
+            } catch (e) {
+                await W.replyUser(ctx, 'An error occurred while executing the command, please try again later.')
+                log('error', e)
+            }
+        })
+
         this.Security.on('messageSpam', async ctx => {
             const uid = ctx.from?.id
             if ( !uid || !ctx.chat?.id ) return
@@ -245,4 +289,4 @@ if ( import.meta.main ) {
 }
 
 export { PallasClass }
-export type { Command, Context, WrapperContext, SequenceInput }
+export type { Command, Context, WrapperContext, SequenceInput, InlineKeyboardData }
