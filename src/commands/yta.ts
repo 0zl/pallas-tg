@@ -1,15 +1,16 @@
 import type { Command, Context, WrapperContext } from '../main.ts'
 import PallasMemory from '../memory.ts'
+import YtMusic from '../libs/yt-music.ts'
 
 export default class TestCommand implements Command {
-    name = 'ping'
-    description = 'Ping Command.'
-    details = 'This is a ping command.'
-    usage = 'ping'
+    name = 'yta'
+    description = 'Search and download music from YouTube.'
+    details = 'Search and download music from YouTube.'
+    usage = 'yta'
     limits = {
-        private: false,
+        private: true,
         group: true,
-        channel: true
+        channel: false
     }
     
     run = async (ctx: Context, _W: WrapperContext, _M: PallasMemory) => {

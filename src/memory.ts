@@ -4,6 +4,10 @@ import { ts } from './utils/time.ts'
 import { merge } from "https://raw.githubusercontent.com/lodash/lodash/4.17.21-es/lodash.js"
 
 type User = {
+    sequenceInput: {
+        question: string[]
+        answer: string[]
+    }
     security: {
         spam: {
             count: number
@@ -28,6 +32,10 @@ export default class PallasMemory {
 
     private factoryUser(): User {
         return {
+            sequenceInput: {
+                question: [],
+                answer: []
+            },
             security: {
                 spam: {
                     count: 0,
@@ -104,5 +112,30 @@ export default class PallasMemory {
             clearTimeout(timeout)
             delete this.Users[id].timeouts[name]
         }
+    }
+
+    addSeqInput(id: number, ...question: string[]) {
+        this.Users[id].sequenceInput.question.push(...question)
+    }
+
+    addSeqAnswer(id: number, answer: string) {
+        this.Users[id].sequenceInput.answer.push(answer)
+    }
+
+    getSeqInput(id: number): { question: string[]; answer: string[] } {
+        return this.Users[id].sequenceInput
+    }
+
+    isSeqComplete(id: number): boolean {
+        return this.Users[id].sequenceInput.question.length === this.Users[id].sequenceInput.answer.length
+    }
+
+    clearSeqInput(id: number) {
+        this.updateUser(id, {
+            sequenceInput: {
+                question: [],
+                answer: []
+            }
+        })
     }
 }
