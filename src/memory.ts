@@ -5,6 +5,7 @@ import { merge } from "https://raw.githubusercontent.com/lodash/lodash/4.17.21-e
 
 type User = {
     sequenceInput: {
+        command: string | null
         question: string[]
         answer: string[]
     }
@@ -33,6 +34,7 @@ export default class PallasMemory {
     private factoryUser(): User {
         return {
             sequenceInput: {
+                command: null,
                 question: [],
                 answer: []
             },
@@ -114,7 +116,8 @@ export default class PallasMemory {
         }
     }
 
-    addSeqInput(id: number, ...question: string[]) {
+    addSeqInput(id: number, command: string, ...question: string[]) {
+        this.Users[id].sequenceInput.command = command
         this.Users[id].sequenceInput.question.push(...question)
     }
 
@@ -126,13 +129,21 @@ export default class PallasMemory {
         return this.Users[id].sequenceInput
     }
 
+    isSeqInputRequired(id: number): boolean {
+        return this.Users[id].sequenceInput.command !== null && this.Users[id].sequenceInput.question.length > 0
+    }
+
     isSeqComplete(id: number): boolean {
-        return this.Users[id].sequenceInput.question.length === this.Users[id].sequenceInput.answer.length
+        const seqcmd = this.Users[id].sequenceInput.command
+        const qlen = this.Users[id].sequenceInput.question.length
+        const alen = this.Users[id].sequenceInput.answer.length
+        return seqcmd !== null && qlen === alen
     }
 
     clearSeqInput(id: number) {
         this.updateUser(id, {
             sequenceInput: {
+                command: null,
                 question: [],
                 answer: []
             }
