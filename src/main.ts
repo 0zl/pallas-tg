@@ -17,6 +17,7 @@ type CommandLimits = {
 
 interface WrapperContext {
     replyUser: (ctx: Context, text: string) => Promise<void>
+    createSeqInput: (ctx: Context, id: number, command: string, questions: string[]) => Promise<void>
 }
 
 interface Command {
@@ -85,6 +86,12 @@ class PallasClass extends Grammy {
         const W = {
             replyUser: async (ctx: Context, text: string) => {
                 await ctx.reply(`@${ctx.from?.username}, ${text}`)
+            },
+
+            createSeqInput: async (ctx: Context, id: number, command: string, questions: string[]) => {
+                this.Memory.setSeqInput(id, command, ...questions)
+                const firstQuestion = questions[0]
+                await ctx.reply(`@${ctx.from?.username}, ${firstQuestion}`)
             }
         }
 
@@ -134,8 +141,8 @@ class PallasClass extends Grammy {
                 if ( this.Memory.isSeqComplete(uid) ) {
                     try {
                         await this.Commands[seq?.command ?? -1]?.task(ctx, W, this.Memory)
-                        this.Memory.clearSeqInput(uid)
                         log('info', `command task <${seq?.command}> executed by ${ctx.from?.first_name} (${ctx.from?.id})`)
+                        this.Memory.clearSeqInput(uid)
                     } catch (e) {
                         await W.replyUser(ctx, 'An error occurred while executing the command, please try again later.')
                         log('error', e)

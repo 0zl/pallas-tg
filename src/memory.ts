@@ -117,6 +117,7 @@ export default class PallasMemory {
     }
 
     setSeqInput(id: number, command: string, ...question: string[]) {
+        this.checkUser(id)
         this.Users[id].sequenceInput.command = command
         this.Users[id].sequenceInput.question.push(...question)
     }

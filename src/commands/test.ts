@@ -14,20 +14,12 @@ export default class TestCommand implements Command {
     }
     
     run = async (ctx: Context, _W: WrapperContext, _M: PallasMemory) => {
-        console.log('owo?')
-        await ctx.reply('nya!', {
-            reply_markup: new InlineKeyboard()
-                .text('meong', 'owo').row()
-                .text('nyaa', 'owo').row()
-                .text('1', 'owo')
-                .text('2', 'owo')
-                .text('3', 'owo')
-                .text('4', 'owo')
-                .text('5', 'owo')
-                .text('6', 'owo')
-                .text('7', 'owo')
-                .text('8', 'owo')
-        })
+        if ( !ctx.from?.id ) return
+        
+        await _W.createSeqInput(ctx, ctx.from?.id, 'test', [
+            'What is your name?',
+            'What is your age?'
+        ])
     }
 
     task = async (ctx: Context, _W: WrapperContext, _M: PallasMemory) => {
