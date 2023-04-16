@@ -26,6 +26,7 @@ interface Command {
     usage: string | string[]
     limits: CommandLimits
     run: (ctx: Context, W: WrapperContext, M: PallasMemory) => Promise<void>
+    task: (ctx: Context, W: WrapperContext, M: PallasMemory) => Promise<void>
 }
 
 class PallasClass extends Grammy {

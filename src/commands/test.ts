@@ -29,4 +29,8 @@ export default class TestCommand implements Command {
                 .text('8', 'owo')
         })
     }
+
+    task = async (ctx: Context, _W: WrapperContext, _M: PallasMemory) => {
+        await ctx.reply('nya~')
+    }
 }

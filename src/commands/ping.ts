@@ -15,4 +15,8 @@ export default class TestCommand implements Command {
     run = async (ctx: Context, _W: WrapperContext, _M: PallasMemory) => {
         await ctx.reply('pong!')
     }
+
+    task = async (ctx: Context, _W: WrapperContext, _M: PallasMemory) => {
+        await ctx.reply('nya~')
+    }
 }
