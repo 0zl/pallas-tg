@@ -1,13 +1,13 @@
 import log from './utils/logger.ts'
 import { ts } from './utils/time.ts'
-
 import { merge } from "https://raw.githubusercontent.com/lodash/lodash/4.17.21-es/lodash.js"
+import type { Message } from 'https://deno.land/x/grammy_types@v3.0.3/message.ts'
 
 type User = {
     sequenceInput: {
         command: string | null
         question: string[]
-        answer: string[]
+        answer: Message[]
     }
     security: {
         spam: {
@@ -121,11 +121,11 @@ export default class PallasMemory {
         this.Users[id].sequenceInput.question.push(...question)
     }
 
-    addSeqAnswer(id: number, answer: string) {
+    addSeqAnswer(id: number, answer: Message) {
         this.Users[id].sequenceInput.answer.push(answer)
     }
 
-    getSeqInput(id: number): { question: string[]; answer: string[] } {
+    getSeqInput(id: number): { question: string[]; answer: Message[] } {
         return this.Users[id].sequenceInput
     }
 
