@@ -2,6 +2,8 @@ import log from './utils/logger.ts'
 import PallasMemory from './memory.ts'
 import PallasSecurity from './security.ts'
 
+import type { SequenceInput } from './memory.ts'
+
 import { expandGlobSync } from "https://deno.land/std@0.183.0/fs/mod.ts"
 import { assert } from 'https://deno.land/std@0.183.0/_util/asserts.ts'
 import { Bot as Grammy, Context } from "https://deno.land/x/grammy@v1.15.3/mod.ts"
@@ -26,7 +28,7 @@ interface Command {
     usage: string | string[]
     limits: CommandLimits
     run: (ctx: Context, W: WrapperContext, M: PallasMemory) => Promise<void>
-    task: (ctx: Context, W: WrapperContext, M: PallasMemory) => Promise<void>
+    task: (seq: SequenceInput, ctx: Context, W: WrapperContext, M: PallasMemory) => Promise<void>
 }
 
 class PallasClass extends Grammy {
@@ -154,7 +156,7 @@ class PallasClass extends Grammy {
 
                 if ( this.Memory.isSeqComplete(uid) ) {
                     try {
-                        await this.Commands[seq?.command ?? -1]?.task(ctx, W, this.Memory)
+                        await this.Commands[seq?.command ?? -1]?.task(seq, ctx, W, this.Memory)
                         log('info', `command task <${seq?.command}> executed by ${ctx.from?.first_name} (${ctx.from?.id})`)
                         this.Memory.clearSeqInput(uid)
                     } catch (e) {
@@ -224,4 +226,4 @@ if ( import.meta.main ) {
 }
 
 export { PallasClass }
-export type { Command, Context, WrapperContext }
+export type { Command, Context, WrapperContext, SequenceInput }

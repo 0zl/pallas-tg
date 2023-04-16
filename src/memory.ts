@@ -3,12 +3,14 @@ import { ts } from './utils/time.ts'
 import { merge } from "https://raw.githubusercontent.com/lodash/lodash/4.17.21-es/lodash.js"
 import type { Message } from 'https://deno.land/x/grammy_types@v3.0.3/message.ts'
 
+type SequenceInput = {
+    command: string | null
+    question: string[]
+    answer: Message[]
+}
+
 type User = {
-    sequenceInput: {
-        command: string | null
-        question: string[]
-        answer: Message[]
-    }
+    sequenceInput: SequenceInput
     security: {
         spam: {
             count: number
@@ -151,7 +153,7 @@ export default class PallasMemory {
                 answer: []
             }
         })
-
-        log('info', `user <${id}> sequence input cleared.`)
     }
 }
+
+export type { SequenceInput }

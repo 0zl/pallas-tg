@@ -1,6 +1,5 @@
-import type { Command, Context, WrapperContext } from '../main.ts'
+import type { Command, Context, WrapperContext, SequenceInput } from '../main.ts'
 import PallasMemory from "../memory.ts"
-import { InlineKeyboard } from 'https://deno.land/x/grammy@v1.15.3/mod.ts'
 
 export default class TestCommand implements Command {
     name = 'test'
@@ -21,7 +20,7 @@ export default class TestCommand implements Command {
         ])
     }
 
-    task = async (ctx: Context, _W: WrapperContext, _M: PallasMemory) => {
+    task = async (seq: SequenceInput, ctx: Context, _W: WrapperContext, _M: PallasMemory) => {
         await ctx.reply('nya~')
     }
 }
