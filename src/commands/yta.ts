@@ -2,7 +2,6 @@ import type { Command, Context, WrapperContext, SequenceInput } from '../main.ts
 import PallasMemory from '../memory.ts'
 
 import YtMusic from '../libs/yt-music.ts'
-import { YTNodes } from 'https://deno.land/x/youtubei@v4.3.0-deno/deno.ts'
 
 export default class TestCommand implements Command {
     name = 'yta'
