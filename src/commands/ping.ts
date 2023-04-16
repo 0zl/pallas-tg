@@ -15,7 +15,7 @@ export default class TestCommand implements Command {
         await ctx.reply('pong!')
     }
 
-    task = async (seq: SequenceInput, ctx: Context, _W: WrapperContext, _M: PallasMemory) => {
+    task = async (_seq: SequenceInput, ctx: Context, _W: WrapperContext, _M: PallasMemory) => {
         await ctx.reply('nya~')
     }
 }
