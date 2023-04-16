@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "start": "deno run --allow-env --allow-net --allow-read --allow-run --unstable src/main.ts",
-    "heroku": "deno run --allow-env --allow-net --allow-read --allow-run --unstable src/main.ts -heroku"
+    "start": "deno run --allow-all --unstable src/main.ts",
+    "heroku": "deno run --allow-all --unstable src/main.ts -heroku"
   }
 }
