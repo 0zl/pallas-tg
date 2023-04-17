@@ -6,11 +6,12 @@ import type { SequenceInput } from './memory.ts'
 
 import { expandGlobSync } from "https://deno.land/std@0.183.0/fs/mod.ts"
 import { assert } from 'https://deno.land/std@0.183.0/_util/asserts.ts'
-import { Bot as Grammy, Context } from "https://deno.land/x/grammy@v1.15.3/mod.ts"
+import { Bot as Grammy, Context, InputFile } from "https://deno.land/x/grammy@v1.15.3/mod.ts"
 import { BotCommand, UserFromGetMe } from 'https://deno.land/x/grammy_types@v3.0.3/manage.ts'
 import { Application as Oak } from "https://deno.land/x/oak@v12.1.0/mod.ts"
 import { Message } from 'https://deno.land/x/grammy_types@v3.0.3/message.ts'
 import { InlineKeyboardMarkup } from 'https://deno.land/x/grammy_types@v3.0.3/markup.ts'
+import { type InputMediaAudio } from 'https://deno.land/x/grammy@v1.15.3/types.deno.ts'
 
 type DeployMode = 'direct' | 'heroku'
 type CommandLimits = {
@@ -28,6 +29,13 @@ interface WrapperContext {
     replyUser: (ctx: Context, text: string) => Promise<Message.TextMessage>
     editReplyUser: (ctx: Context, text: string, chatId: string | number, messageId: number, replyMarkup?: InlineKeyboardMarkup) => Promise<void>
     createSeqInput: (ctx: Context, id: number, command: string, questions: string[], task?: string) => Promise<void>
+    sendLoadingAudio: (ctx: Context) => Promise<Array<
+        | Message.AudioMessage
+        | Message.DocumentMessage
+        | Message.PhotoMessage
+        | Message.VideoMessage
+    >>
+    editReplyUserAudio: (ctx: Context, media: InputMediaAudio, chatId: string | number, messageId: number) => Promise<void>
 }
 
 interface Command {
@@ -117,6 +125,26 @@ class PallasClass extends Grammy {
                 await ctx.api.editMessageText(chatId, messageId, `@${ctx.from?.username}, ${text}`, {
                     parse_mode: 'MarkdownV2',
                     reply_markup: replyMarkup
+                })
+            },
+
+            editReplyUserAudio: async (ctx: Context, media: InputMediaAudio, chatId: string | number, messageId: number) => {
+                await ctx.api.editMessageMedia(chatId, messageId, media)
+            },
+
+            sendLoadingAudio: async (ctx: Context) => {
+                const media: InputMediaAudio = {
+                    type: 'audio',
+                    media: new InputFile('assets/blank.mp3', 'Loading.mp3'),
+                    caption: `@${ctx.from?.username}, please wait!...`,
+                    title: 'Loading...',
+                    performer: 'Pallas Telegram'
+                }
+
+                return await ctx.api.sendMediaGroup(Number(ctx.chat?.id), [ media ], {
+                    message_thread_id: 
+                        ctx.message?.reply_to_message?.message_thread_id ||
+                        ctx.update.callback_query?.message?.reply_to_message?.message_thread_id
                 })
             },
 
@@ -224,17 +252,23 @@ class PallasClass extends Grammy {
             }
 
             const cmd = this.Commands[data.command]
-            if ( !cmd || !cmd.inlineKeyboard )
+            if ( !cmd || !cmd.inlineKeyboard ) {
+                await ctx.answerCallbackQuery()
                 return log('warn', `inline keyboard command <${data.command}> does not exist.`)
+            }
 
             try {
                 await cmd.inlineKeyboard(data, ctx, W, this.Memory)
-                await ctx.answerCallbackQuery()
                 log('info', `inline keyboard <${data.command}> executed by ${ctx.from?.first_name} (${ctx.from?.id})`)
             } catch (e) {
                 await W.replyUser(ctx, 'An error occurred while executing the command, please try again later.')
                 log('error', e)
             }
+
+            try {
+                await ctx.answerCallbackQuery()
+            // deno-lint-ignore no-empty
+            } catch {}
         })
 
         this.Security.on('messageSpam', async ctx => {

@@ -1,4 +1,4 @@
-import type { Command, Context, WrapperContext, SequenceInput } from '../main.ts'
+import type { Command, Context, WrapperContext, SequenceInput, InlineKeyboardData } from '../main.ts'
 import PallasMemory from '../memory.ts'
 
 export default class TestCommand implements Command {
@@ -18,5 +18,10 @@ export default class TestCommand implements Command {
 
     task = async (_seq: SequenceInput, ctx: Context, _W: WrapperContext, _M: PallasMemory) => {
         await ctx.reply('nya~')
+    }
+
+    inlineKeyboard = async (_data: InlineKeyboardData, ctx: Context, _W: WrapperContext, _M: PallasMemory) => {
+        _M.clearSeqInput(Number(ctx.from?.id))
+        await _W.replyUser(ctx, 'your current task has been canceled.')
     }
 }
